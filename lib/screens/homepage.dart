@@ -24,12 +24,13 @@ class HomePage extends StatelessWidget {
                 const Text("Add New task"),
                 const Spacer(),
                 InkWell(
-                    onTap: () {
-                      titleController.clear();
-                      descriptionController.clear();
-                      RoutingService.goBack(context);
-                    },
-                    child: const Icon(Icons.cancel)),
+                  onTap: () {
+                    titleController.clear();
+                    descriptionController.clear();
+                    RoutingService.goBack(context);
+                  },
+                  child: const Icon(Icons.cancel),
+                ),
               ],
             ),
             content: Column(
@@ -62,6 +63,12 @@ class HomePage extends StatelessWidget {
                       titleController.clear();
                       descriptionController.clear();
                       RoutingService.goBack(context);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Title and Description can't be empty"),
+                        ),
+                      );
                     }
                   },
                   child: const Text("Add"),
@@ -161,83 +168,95 @@ class HomePage extends StatelessWidget {
       ),
       body: Consumer<TaskProvider>(
         builder: (context, taskProvider, child) {
-          return ListView.builder(
-            itemCount: taskProvider.tasks.length,
-            itemBuilder: (context, index) {
-              final task = taskProvider.tasks[index];
-              final isCompleted = task["completed"] as bool;
-              return Container(
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [black, grey, black])),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      Card(
-                        elevation: 5,
-                        child: ListTile(
-                          title: Center(
-                              child: Text(
-                            task["title"]!,
-                            style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                decoration: isCompleted
-                                    ? TextDecoration.lineThrough
-                                    : TextDecoration.none),
-                          )),
-                          subtitle: Center(
-                            child: Text(
-                              task["description"]!,
-                              style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  decoration: isCompleted
-                                      ? TextDecoration.lineThrough
-                                      : TextDecoration.none),
+          return taskProvider.tasks.isNotEmpty
+              ? ListView.builder(
+                  itemCount: taskProvider.tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = taskProvider.tasks[index];
+                    final isCompleted = task["completed"] as bool;
+                    return Container(
+                      decoration: BoxDecoration(
+                          gradient:
+                              LinearGradient(colors: [black, grey, black])),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            Card(
+                              elevation: 5,
+                              child: ListTile(
+                                title: Center(
+                                    child: Text(
+                                  task["title"]!,
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      decoration: isCompleted
+                                          ? TextDecoration.lineThrough
+                                          : TextDecoration.none),
+                                )),
+                                subtitle: Center(
+                                  child: Text(
+                                    task["description"]!,
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        decoration: isCompleted
+                                            ? TextDecoration.lineThrough
+                                            : TextDecoration.none),
+                                  ),
+                                ),
+                                trailing: Column(
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        showEditTaskDialog(
+                                            index,
+                                            task["title"]!,
+                                            task["description"]!);
+                                      },
+                                      child: Icon(
+                                        Icons.edit,
+                                        color: green,
+                                      ),
+                                    ),
+                                    InkWell(
+                                      onTap: () {
+                                        Provider.of<TaskProvider>(context,
+                                                listen: false)
+                                            .deleteTask(index);
+                                      },
+                                      child: Icon(
+                                        Icons.delete_forever,
+                                        color: red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                leading: Checkbox(
+                                  value: isCompleted,
+                                  onChanged: (value) {
+                                    Provider.of<TaskProvider>(context,
+                                            listen: false)
+                                        .toggleTaskCompletion(index);
+                                  },
+                                ),
+                              ),
                             ),
-                          ),
-                          trailing: Column(
-                            children: [
-                              InkWell(
-                                onTap: () {
-                                  showEditTaskDialog(index, task["title"]!,
-                                      task["description"]!);
-                                },
-                                child: Icon(
-                                  Icons.edit,
-                                  color: green,
-                                ),
-                              ),
-                              InkWell(
-                                onTap: () {
-                                  Provider.of<TaskProvider>(context,
-                                          listen: false)
-                                      .deleteTask(index);
-                                },
-                                child: Icon(
-                                  Icons.delete_forever,
-                                  color: red,
-                                ),
-                              ),
-                            ],
-                          ),
-                          leading: Checkbox(
-                            value: isCompleted,
-                            onChanged: (value) {
-                              Provider.of<TaskProvider>(context, listen: false)
-                                  .toggleTaskCompletion(index);
-                            },
-                          ),
+                            const Gap(10),
+                          ],
                         ),
                       ),
-                      const Gap(10),
-                    ],
+                    );
+                  },
+                )
+              : const Center(
+                  child: const Text(
+                    "Please click on the add button on the bottom right corner to add task",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20),
                   ),
-                ),
-              );
-            },
-          );
+                );
         },
       ),
     );
